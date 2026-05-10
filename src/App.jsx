@@ -142,11 +142,13 @@ export default function App() {
             </div>
             <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
               {formatWeekRange(weekDates)}
-              {daysUntilPay <= 3 && !payday && (
-                <span style={{ marginLeft: 8, color: 'var(--pay)', fontWeight: 600 }}>
-                  · Payday in {daysUntilPay}d
-                </span>
-              )}
+              <span style={{
+                marginLeft: 8,
+                fontWeight: 700,
+                color: payday ? 'var(--pay)' : daysUntilPay <= 3 ? 'var(--pay)' : 'var(--text-muted)',
+              }}>
+                · {payday ? '💰 Payday Today' : `Payday in ${daysUntilPay}d`}
+              </span>
             </p>
           </div>
           <button onClick={() => setShowSettings(true)} style={{
