@@ -1,8 +1,10 @@
 export function getWeekDates(referenceDate = new Date()) {
   const d = new Date(referenceDate);
-  const day = d.getDay(); // 0=Sun
+  const day = d.getDay(); // 0=Sun, 6=Sat
+  // Week starts Saturday: offset so Sat=0, Sun=1, ..., Fri=6
+  const offset = (day + 1) % 7;
   d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - day);
+  d.setDate(d.getDate() - offset);
   return Array.from({ length: 7 }, (_, i) => {
     const date = new Date(d);
     date.setDate(d.getDate() + i);
