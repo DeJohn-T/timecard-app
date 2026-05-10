@@ -16,40 +16,40 @@ export default function DayEntry({ date, entry, onChange }) {
         onChange={(b) => update('bullets', b)}
       />
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-        <label style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 10 }}>
+        <label>
           <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Start</span>
           <input
-            type="time"
+            type="text"
+            inputMode="text"
+            placeholder="9:00 AM"
             value={entry.startTime || ''}
             onChange={(e) => update('startTime', e.target.value)}
             style={timeInputStyle}
           />
         </label>
-        <label style={{ flex: 1, minWidth: 0 }}>
+        <label>
           <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>End</span>
           <input
-            type="time"
+            type="text"
+            inputMode="text"
+            placeholder="5:00 PM"
             value={entry.endTime || ''}
             onChange={(e) => update('endTime', e.target.value)}
             style={timeInputStyle}
           />
         </label>
-      </div>
-      <div style={{ marginTop: 8 }}>
         <label>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
-            Hours <span style={{ fontStyle: 'italic' }}>(if you don't know exact times)</span>
-          </span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Hours</span>
           <input
             type="number"
             step="0.5"
             min="0"
             max="24"
-            placeholder="e.g. 8"
+            placeholder="8"
             value={entry.hours || ''}
             onChange={(e) => update('hours', e.target.value)}
-            style={{ ...timeInputStyle, width: '40%' }}
+            style={timeInputStyle}
           />
         </label>
       </div>

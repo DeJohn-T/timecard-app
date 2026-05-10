@@ -57,10 +57,22 @@ export function isToday(date) {
 export function parseHoursFromTimes(startTime, endTime) {
   if (!startTime || !endTime) return null;
   const toMinutes = (t) => {
-    const [h, m] = t.split(':').map(Number);
-    return h * 60 + (m || 0);
+    const s = t.trim().toUpperCase();
+    const isPM = s.includes('PM');
+    const isAM = s.includes('AM');
+    const clean = s.replace(/[APM\s]/g, '');
+    const [hStr, mStr] = clean.split(':');
+    let h = parseInt(hStr, 10);
+    const m = parseInt(mStr || '0', 10);
+    if (isNaN(h)) return null;
+    if (isPM && h !== 12) h += 12;
+    if (isAM && h === 12) h = 0;
+    return h * 60 + m;
   };
-  const diff = (toMinutes(endTime) - toMinutes(startTime)) / 60;
+  const start = toMinutes(startTime);
+  const end = toMinutes(endTime);
+  if (start === null || end === null) return null;
+  const diff = (end - start) / 60;
   return diff > 0 ? diff : null;
 }
 
