@@ -16,8 +16,8 @@ export default function DayEntry({ date, entry, onChange }) {
         onChange={(b) => update('bullets', b)}
       />
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
-        <label style={{ flex: '1 1 80px', minWidth: 0 }}>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        <label style={{ flex: 1, minWidth: 0 }}>
           <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Start</span>
           <input
             type="time"
@@ -26,7 +26,7 @@ export default function DayEntry({ date, entry, onChange }) {
             style={timeInputStyle}
           />
         </label>
-        <label style={{ flex: '1 1 80px', minWidth: 0 }}>
+        <label style={{ flex: 1, minWidth: 0 }}>
           <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>End</span>
           <input
             type="time"
@@ -35,17 +35,21 @@ export default function DayEntry({ date, entry, onChange }) {
             style={timeInputStyle}
           />
         </label>
-        <label style={{ flex: '1 1 60px', minWidth: 0 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Hours</span>
+      </div>
+      <div style={{ marginTop: 8 }}>
+        <label>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
+            Hours <span style={{ fontStyle: 'italic' }}>(if you don't know exact times)</span>
+          </span>
           <input
             type="number"
             step="0.5"
             min="0"
             max="24"
-            placeholder="—"
+            placeholder="e.g. 8"
             value={entry.hours || ''}
             onChange={(e) => update('hours', e.target.value)}
-            style={timeInputStyle}
+            style={{ ...timeInputStyle, width: '40%' }}
           />
         </label>
       </div>
