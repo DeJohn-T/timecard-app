@@ -64,7 +64,8 @@ ${myName || '[Name]'}`;
 
   const userPrompt = `Format the following work notes into the weekly timecard email:\n\n${rawData}`;
 
-  const response = await fetch('/api/anthropic/v1/messages', {
+  const endpoint = import.meta.env.DEV ? '/api/anthropic/v1/messages' : '/api/anthropic';
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
