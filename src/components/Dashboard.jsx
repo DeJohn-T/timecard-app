@@ -152,9 +152,10 @@ export default function Dashboard({ currentWeekHours, currentWeekKey }) {
         <StatCard label="This week" value={`${fmtH(currentWeekHours)}h`} sub="logged so far" />
         <StatCard
           label="Next payday"
-          value={daysUntilPay === 0 ? 'Today!' : `${daysUntilPay}d`}
+          value={daysUntilPay === 0 ? '💰 Today!' : `${daysUntilPay}d`}
           sub={nextPayday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          accent={daysUntilPay <= 2}
+          payday={daysUntilPay === 0}
+          accent={daysUntilPay <= 2 && daysUntilPay > 0}
         />
         <StatCard label="Total submitted" value={`${fmtH(totalSubmittedHours)}h`} sub={`${submittedWeeks.length} weeks`} />
         <StatCard label="Weeks logged" value={allWeeks.filter((w) => Object.values(w.entries).some((e) => calcEntryHours(e) > 0)).length} sub="all time" />
@@ -232,16 +233,19 @@ export default function Dashboard({ currentWeekHours, currentWeekKey }) {
   );
 }
 
-function StatCard({ label, value, sub, accent }) {
+function StatCard({ label, value, sub, accent, payday }) {
   return (
-    <div style={{
-      background: 'var(--surface)',
-      border: `1px solid ${accent ? 'var(--accent)' : 'var(--border)'}`,
-      borderRadius: 12,
-      padding: '14px 16px',
-    }}>
-      <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>{label}</p>
-      <p style={{ margin: '4px 0 2px', fontSize: 24, fontWeight: 700, color: accent ? 'var(--accent)' : 'var(--text)', lineHeight: 1 }}>
+    <div
+      className={payday ? 'payday-today' : accent ? 'payday-card' : ''}
+      style={{
+        background: payday ? 'linear-gradient(135deg, #2a2210 0%, #1a1a0e 100%)' : 'var(--surface)',
+        border: `1.5px solid ${payday ? 'var(--pay)' : accent ? 'rgba(246,201,78,0.5)' : 'var(--border)'}`,
+        borderRadius: 12,
+        padding: '14px 16px',
+      }}
+    >
+      <p style={{ margin: 0, fontSize: 12, color: payday || accent ? 'var(--pay)' : 'var(--text-muted)' }}>{label}</p>
+      <p style={{ margin: '4px 0 2px', fontSize: 22, fontWeight: 700, lineHeight: 1, color: payday ? 'var(--pay)' : accent ? 'var(--pay)' : 'var(--text)' }}>
         {value}
       </p>
       <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>{sub}</p>

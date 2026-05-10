@@ -10,6 +10,31 @@ import {
 } from './lib/dates.js';
 import { getEntries, saveEntry, isWeekSubmitted, markWeekSubmitted, getSettings } from './lib/storage.js';
 
+function isPayday() {
+  const d = new Date().getDate();
+  return d === 15 || d === 30;
+}
+
+function daysUntilNextPayday() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const d = now.getDate();
+  const m = now.getMonth();
+  const y = now.getFullYear();
+  const candidates = [
+    new Date(y, m, 15),
+    new Date(y, m, 30),
+    new Date(y, m + 1, 15),
+    new Date(y, m + 1, 30),
+  ];
+  for (const c of candidates) {
+    c.setHours(0, 0, 0, 0);
+    const diff = Math.round((c - now) / 86400000);
+    if (diff >= 0) return diff;
+  }
+  return 0;
+}
+
 export default function App() {
   const weekDates = getWeekDates();
   const weekKey = getWeekKey(weekDates);
@@ -22,8 +47,11 @@ export default function App() {
   const [settings, setSettings] = useState(() => getSettings());
   const [submitted, setSubmitted] = useState(() => isWeekSubmitted(weekKey));
   const [fridayBanner, setFridayBanner] = useState(false);
-  const [view, setView] = useState('log'); // 'log' | 'dashboard'
+  const [view, setView] = useState('log');
   const saveTimer = useRef({});
+
+  const payday = isPayday();
+  const daysUntilPay = daysUntilNextPayday();
 
   useEffect(() => {
     if (!submitted && isTodayFridayAfter8AM(settings.timezone)) {
@@ -66,11 +94,33 @@ export default function App() {
   const fmtH = (h) => (h % 1 === 0 ? `${h}.0` : h.toFixed(2).replace(/0+$/, ''));
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 16px', minHeight: '100vh' }}>
+    <div style={{ maxWidth: 600, margin: '0 auto', padding: '0 14px', minHeight: '100vh' }}>
+
+      {/* Payday banner */}
+      {payday && (
+        <div style={{
+          margin: '12px 0 0',
+          borderRadius: 12,
+          padding: '13px 16px',
+          background: 'linear-gradient(135deg, #2a2210 0%, #1a1a0e 100%)',
+          border: '1.5px solid var(--pay)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          animation: 'pay-glow 1.4s ease-in-out infinite',
+        }}>
+          <span style={{ fontSize: 22 }}>💰</span>
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: 'var(--pay)' }}>It's Payday!</p>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>Get that bag secured.</p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0 12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0 10px' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)' }}>Timecard</h1>
+          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>Timecard</h1>
           <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>{formatWeekRange(weekDates)}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -79,12 +129,21 @@ export default function App() {
               {fmtH(totalHours)}h
             </span>
           )}
+          {daysUntilPay <= 2 && !payday && (
+            <span style={{
+              fontSize: 11, fontWeight: 600, color: 'var(--pay)',
+              background: 'var(--pay-dim)', borderRadius: 6,
+              padding: '3px 7px', border: '1px solid rgba(246,201,78,0.3)',
+            }}>
+              Payday in {daysUntilPay}d
+            </span>
+          )}
           <button onClick={() => setShowSettings(true)} style={iconBtnStyle} title="Settings">⚙️</button>
         </div>
       </div>
 
       {/* Tab nav */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: 'var(--surface)', borderRadius: 10, padding: 4 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 12, background: 'var(--surface)', borderRadius: 10, padding: 4 }}>
         {['log', 'dashboard'].map((tab) => (
           <button
             key={tab}
@@ -99,7 +158,6 @@ export default function App() {
               fontWeight: view === tab ? 600 : 400,
               fontSize: 14,
               cursor: 'pointer',
-              transition: 'background 0.15s',
             }}
           >
             {tab === 'log' ? 'Log' : 'Dashboard'}
@@ -109,24 +167,19 @@ export default function App() {
 
       {view === 'log' ? (
         <>
-          {/* Friday banner */}
           {fridayBanner && !submitted && (
             <div style={{
-              background: 'var(--accent-dim)',
-              border: '1px solid var(--accent)',
-              borderRadius: 10,
-              padding: '12px 14px',
-              marginBottom: 14,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 10,
+              background: 'var(--accent-dim)', border: '1px solid var(--accent)',
+              borderRadius: 10, padding: '11px 14px', marginBottom: 12,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10,
             }}>
-              <span style={{ fontSize: 14, color: 'var(--text)' }}>It's Friday - time to send your timecard!</span>
+              <span style={{ fontSize: 14, color: 'var(--text)' }}>
+                {payday ? 'Friday + Payday - send that timecard!' : "It's Friday - send your timecard!"}
+              </span>
               <button onClick={() => setShowEmail(true)} style={{
                 background: 'var(--accent)', color: '#fff', border: 'none',
                 borderRadius: 7, padding: '7px 14px', fontSize: 13, fontWeight: 600,
-                cursor: 'pointer', whiteSpace: 'nowrap',
+                cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
               }}>
                 Generate
               </button>
@@ -136,7 +189,7 @@ export default function App() {
           {submitted && (
             <div style={{
               background: 'var(--success-dim)', border: '1px solid var(--success)',
-              borderRadius: 10, padding: '10px 14px', marginBottom: 14,
+              borderRadius: 10, padding: '10px 14px', marginBottom: 12,
               fontSize: 14, color: 'var(--success)',
             }}>
               Timecard submitted for this week.
@@ -144,7 +197,7 @@ export default function App() {
           )}
 
           {/* Day buttons */}
-          <div style={{ display: 'flex', gap: 6, justifyContent: 'space-between', padding: '4px 0 16px' }}>
+          <div style={{ display: 'flex', gap: 4, justifyContent: 'space-between', padding: '2px 0 14px' }}>
             {weekDates.map((date, i) => {
               const dk = getDateKey(date);
               const e = entries[dk];
@@ -168,7 +221,7 @@ export default function App() {
           />
 
           {hasEntries && !submitted && (
-            <div style={{ marginTop: 24, paddingBottom: 40 }}>
+            <div style={{ marginTop: 20, paddingBottom: 40 }}>
               <button onClick={() => setShowEmail(true)} style={{ ...primaryBtnStyle, width: '100%' }}>
                 Generate Email Draft
               </button>

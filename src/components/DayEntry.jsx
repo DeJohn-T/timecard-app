@@ -5,20 +5,19 @@ import BulletInput from './BulletInput.jsx';
 export default function DayEntry({ date, entry, onChange }) {
   const update = (field, value) => onChange({ ...entry, [field]: value });
   const label = formatDayLabel(date);
-
   const bullets = entry.bullets || (entry.notes ? [entry.notes] : []);
 
   return (
-    <div style={{ padding: '16px 0 0' }}>
-      <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--text)', fontSize: 15 }}>{label}</p>
+    <div style={{ paddingTop: 4 }}>
+      <p style={{ margin: '0 0 10px', fontWeight: 600, color: 'var(--text)', fontSize: 15 }}>{label}</p>
 
       <BulletInput
         bullets={bullets}
         onChange={(b) => update('bullets', b)}
       />
 
-      <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-        <label style={{ flex: 1 }}>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+        <label style={{ flex: '1 1 80px', minWidth: 0 }}>
           <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Start</span>
           <input
             type="time"
@@ -27,7 +26,7 @@ export default function DayEntry({ date, entry, onChange }) {
             style={timeInputStyle}
           />
         </label>
-        <label style={{ flex: 1 }}>
+        <label style={{ flex: '1 1 80px', minWidth: 0 }}>
           <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>End</span>
           <input
             type="time"
@@ -36,7 +35,7 @@ export default function DayEntry({ date, entry, onChange }) {
             style={timeInputStyle}
           />
         </label>
-        <label style={{ flex: 1 }}>
+        <label style={{ flex: '1 1 60px', minWidth: 0 }}>
           <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Hours</span>
           <input
             type="number"
@@ -51,7 +50,7 @@ export default function DayEntry({ date, entry, onChange }) {
         </label>
       </div>
 
-      <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>
+      <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
         Auto-saved. Start/end takes priority over hours field.
       </p>
     </div>
@@ -63,10 +62,9 @@ const timeInputStyle = {
   background: 'var(--input-bg)',
   border: '1px solid var(--border)',
   borderRadius: 8,
-  padding: '8px 10px',
+  padding: '9px 10px',
   color: 'var(--text)',
   fontSize: 14,
   outline: 'none',
-  boxSizing: 'border-box',
   fontFamily: 'inherit',
 };

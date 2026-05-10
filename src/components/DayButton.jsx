@@ -14,30 +14,40 @@ export default function DayButton({ date, isSelected, hasEntry, onClick }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 44,
-        height: 60,
+        flex: 1,
+        minWidth: 0,
+        height: 58,
         borderRadius: 10,
         border: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
         background: isSelected ? 'var(--accent-dim)' : today ? 'var(--today-bg)' : 'var(--surface)',
         cursor: 'pointer',
-        gap: 2,
-        padding: 0,
+        gap: 1,
+        padding: '0 2px',
         position: 'relative',
-        flexShrink: 0,
       }}
     >
-      <span style={{ fontSize: 11, fontWeight: 500, color: isSelected ? 'var(--accent)' : today ? 'var(--text)' : 'var(--text-muted)' }}>
+      <span style={{
+        fontSize: 10,
+        fontWeight: 500,
+        color: isSelected ? 'var(--accent)' : today ? 'var(--text)' : 'var(--text-muted)',
+        letterSpacing: '0.02em',
+      }}>
         {dayAbbrev}
       </span>
-      <span style={{ fontSize: 17, fontWeight: today ? 700 : 400, color: isSelected ? 'var(--accent)' : 'var(--text)' }}>
+      <span style={{
+        fontSize: 16,
+        fontWeight: today ? 700 : 400,
+        color: isSelected ? 'var(--accent)' : 'var(--text)',
+        lineHeight: 1,
+      }}>
         {dateNum}
       </span>
       {hasEntry && (
         <span style={{
           position: 'absolute',
           bottom: 5,
-          width: 5,
-          height: 5,
+          width: 4,
+          height: 4,
           borderRadius: '50%',
           background: isSelected ? 'var(--accent)' : 'var(--dot)',
         }} />
