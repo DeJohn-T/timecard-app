@@ -21,7 +21,7 @@ export default function DayButton({ date, isSelected, hasEntry, onClick }) {
   } else if (today) {
     bg = isPay ? 'rgba(246,201,78,0.07)' : 'var(--today-bg)';
     border = isPay ? '2px solid var(--pay)' : '2px solid rgba(108,143,255,0.45)';
-    textColor = isPay ? 'var(--pay)' : '#a0aaff';
+    textColor = isPay ? 'var(--pay)' : 'var(--accent)';
     numColor = 'var(--text)';
     className = isPay ? 'payday-card' : 'today-btn';
   } else if (isPay) {

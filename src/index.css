@@ -1,26 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap');
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 :root {
-  --bg: #0d0d10;
-  --surface: #16161a;
-  --surface2: #1e1e24;
-  --input-bg: #1c1c22;
-  --border: #2a2a34;
-  --text: #f0f0f2;
-  --text-muted: #6e6e82;
-  --accent: #6c8fff;
-  --accent-dim: rgba(108, 143, 255, 0.13);
-  --accent-glow: rgba(108, 143, 255, 0.25);
-  --today-bg: #1e1e30;
-  --dot: #6c8fff;
-  --error: #f06060;
+  --bg: #0a0704;
+  --surface: #130e08;
+  --surface2: #1a1208;
+  --input-bg: #160f08;
+  --border: #2a1f14;
+  --text: #f5e6cc;
+  --text-muted: #7a6040;
+  --accent: #c87941;
+  --accent-dim: rgba(200, 121, 65, 0.12);
+  --accent-glow: rgba(200, 121, 65, 0.25);
+  --accent-gradient: linear-gradient(135deg, #c87941, #a85c28);
+  --today-bg: rgba(200, 121, 65, 0.08);
+  --dot: #c87941;
+  --error: #e05c5c;
   --warning: #e5a84a;
-  --success: #4caf7d;
-  --success-dim: rgba(76, 175, 125, 0.12);
-  --pay: #f6c94e;
-  --pay-dim: rgba(246, 201, 78, 0.12);
+  --success: #6dc86d;
+  --success-dim: rgba(109, 200, 109, 0.12);
+  --pay: #d4a84b;
+  --pay-dim: rgba(212, 168, 75, 0.12);
+  --serif: 'Cormorant Garamond', Georgia, serif;
 }
 
 html, body {
@@ -46,16 +50,16 @@ input[type="time"], input[type="number"], select { color-scheme: dark; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 @keyframes pay-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(246, 201, 78, 0.5); }
-  50%       { box-shadow: 0 0 0 8px rgba(246, 201, 78, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 168, 75, 0.5); }
+  50%       { box-shadow: 0 0 0 8px rgba(212, 168, 75, 0); }
 }
 @keyframes pay-glow {
-  0%, 100% { box-shadow: 0 0 14px 2px rgba(246, 201, 78, 0.3); }
-  50%       { box-shadow: 0 0 28px 8px rgba(246, 201, 78, 0.55); }
+  0%, 100% { box-shadow: 0 0 14px 2px rgba(212, 168, 75, 0.3); }
+  50%       { box-shadow: 0 0 28px 8px rgba(212, 168, 75, 0.55); }
 }
 @keyframes today-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(108, 143, 255, 0.4); }
-  50%       { box-shadow: 0 0 0 6px rgba(108, 143, 255, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200, 121, 65, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(200, 121, 65, 0); }
 }
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }

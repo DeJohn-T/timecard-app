@@ -74,7 +74,7 @@ function DonutChart({ segments, size = 120, thickness = 28 }) {
   if (total === 0) return null;
 
   let offset = 0;
-  const COLORS = ['#5b7cf6', '#7c9ef8', '#a0b8fa', '#c4d4fc', '#3d64e6', '#9bb0fa', '#6b90f8', '#b8c8fb'];
+  const COLORS = ['#c87941', '#a85c28', '#d4924e', '#e8a96a', '#8f5220', '#b86c32', '#f0b87a', '#7a3f18'];
 
   const arcs = segments.map((seg, i) => {
     const dash = (seg.value / total) * circumference;
@@ -207,7 +207,7 @@ export default function Dashboard({ currentWeekHours, currentWeekKey }) {
             />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {keywords.map(([word, count], i) => {
-                const COLORS = ['#5b7cf6','#7c9ef8','#a0b8fa','#c4d4fc','#3d64e6','#9bb0fa','#6b90f8','#b8c8fb'];
+                const COLORS = ['#c87941', '#a85c28', '#d4924e', '#e8a96a', '#8f5220', '#b86c32', '#f0b87a', '#7a3f18'];
                 return (
                   <div key={word} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                     <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[i % COLORS.length], flexShrink: 0 }} />
