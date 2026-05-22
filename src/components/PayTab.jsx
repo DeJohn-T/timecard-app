@@ -10,7 +10,7 @@ function fmtDate(date) {
 }
 
 function PeriodCard({ period, hoursLogged, hourlyRate, label }) {
-  const estimated = hourlyRate && hoursLogged ? hoursLogged * parseFloat(hourlyRate) : null;
+  const estimated = hourlyRate && hoursLogged ? Math.min(hoursLogged, 40) * parseFloat(hourlyRate) : null;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const daysLeft = Math.max(0, Math.round((period.end - today) / 86400000));
 
