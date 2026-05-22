@@ -226,11 +226,11 @@ export default function App() {
               <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', fontFamily: 'var(--serif)' }}>
                 Timecard
               </h1>
-              {totalHours > 0 && view === 'log' && (
+              {view === 'log' && (
                 <span style={{
                   fontSize: 12, fontWeight: 600, color: 'var(--accent)',
                   background: 'var(--accent-dim)', borderRadius: 6,
-                  padding: '2px 8px', border: '1px solid rgba(108,143,255,0.2)',
+                  padding: '2px 8px', border: '1px solid rgba(200,121,65,0.3)',
                 }}>
                   {fmtH(totalHours)}h
                 </span>

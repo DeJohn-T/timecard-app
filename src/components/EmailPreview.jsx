@@ -7,8 +7,6 @@ export default function EmailPreview({ entries, weekDates, settings, weekKey, on
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [generated, setGenerated] = useState(false);
-  const [copied, setCopied] = useState(false);
-
   const generate = async () => {
     setLoading(true);
     setError('');
@@ -33,7 +31,7 @@ export default function EmailPreview({ entries, weekDates, settings, weekKey, on
     onSubmitted();
   };
 
-  const copyToClipboard = async () => {
+  const copyAndSend = async () => {
     try {
       await navigator.clipboard.writeText(emailBody);
     } catch {
@@ -46,8 +44,10 @@ export default function EmailPreview({ entries, weekDates, settings, weekKey, on
       document.execCommand('copy');
       document.body.removeChild(el);
     }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    const subject = buildSubject(weekDates, settings.myName);
+    const recipients = settings.recipientEmails.split(',').map((s) => s.trim()).filter(Boolean);
+    openMailto(recipients, subject, emailBody);
+    onSubmitted();
   };
 
   return (
@@ -95,17 +95,14 @@ export default function EmailPreview({ entries, weekDates, settings, weekKey, on
               }}
             />
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
-              Edit above if needed. "Send" opens your email client pre-filled.
+              Edit if needed. "Copy & Open Email" copies the text to clipboard and opens your email client — paste into Gmail if formatting looks off.
             </p>
-            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
               <button onClick={generate} disabled={loading} style={secondaryBtnStyle}>
                 {loading ? '...' : 'Regenerate'}
               </button>
-              <button onClick={copyToClipboard} style={secondaryBtnStyle}>
-                {copied ? '✓ Copied!' : 'Copy'}
-              </button>
-              <button onClick={send} style={{ ...primaryBtnStyle, flex: 1, minWidth: 140 }}>
-                Send via Email Client
+              <button onClick={copyAndSend} style={{ ...primaryBtnStyle, flex: 1 }}>
+                Copy & Open Email
               </button>
             </div>
           </>

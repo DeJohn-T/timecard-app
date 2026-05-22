@@ -54,10 +54,27 @@ export default function SettingsPage({ settings, onSave, onClose }) {
 
         <Field label="Timezone">
           <select value={form.timezone} onChange={(e) => update('timezone', e.target.value)} style={inputStyle}>
-            <option value="America/Chicago">Central (America/Chicago)</option>
-            <option value="America/New_York">Eastern (America/New_York)</option>
-            <option value="America/Denver">Mountain (America/Denver)</option>
-            <option value="America/Los_Angeles">Pacific (America/Los_Angeles)</option>
+            <optgroup label="United States">
+              <option value="America/New_York">Eastern — New York</option>
+              <option value="America/Chicago">Central — Chicago</option>
+              <option value="America/Denver">Mountain — Denver</option>
+              <option value="America/Phoenix">Mountain (no DST) — Phoenix</option>
+              <option value="America/Los_Angeles">Pacific — Los Angeles</option>
+              <option value="America/Anchorage">Alaska — Anchorage</option>
+              <option value="Pacific/Honolulu">Hawaii — Honolulu</option>
+            </optgroup>
+            <optgroup label="International">
+              <option value="UTC">UTC</option>
+              <option value="Europe/London">London</option>
+              <option value="Europe/Paris">Paris / Berlin / Rome</option>
+              <option value="Europe/Helsinki">Helsinki / Athens</option>
+              <option value="Asia/Dubai">Dubai</option>
+              <option value="Asia/Kolkata">India (IST)</option>
+              <option value="Asia/Bangkok">Bangkok / Jakarta</option>
+              <option value="Asia/Shanghai">China (CST)</option>
+              <option value="Asia/Tokyo">Tokyo</option>
+              <option value="Australia/Sydney">Sydney</option>
+            </optgroup>
           </select>
         </Field>
 

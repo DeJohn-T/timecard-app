@@ -91,7 +91,7 @@ function DonutChart({ segments, size = 120, thickness = 28 }) {
   const circ = 2 * Math.PI * r;
   const total = segments.reduce((s, seg) => s + seg.value, 0);
   if (total === 0) return null;
-  const COLORS = ['#c87941','#a85c28','#d4924e','#e8a96a','#8f5220','#b86c32','#f0b87a','#7a3f18'];
+  const COLORS = ['#c87941','#5a9e8f','#d4725a','#7a9e5a','#9b7ec8','#d4b45a','#6b8fae','#c45a7a'];
   let offset = 0;
   const arcs = segments.map((seg, i) => {
     const dash = (seg.value / total) * circ;
@@ -301,7 +301,7 @@ export default function Dashboard({ currentWeekHours, currentWeekKey, onWeekSele
             <DonutChart segments={keywords.map(([word, count]) => ({ label: word, value: count }))} size={110} thickness={24} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
               {keywords.map(([word, count], i) => {
-                const COLORS = ['#c87941','#a85c28','#d4924e','#e8a96a','#8f5220','#b86c32','#f0b87a','#7a3f18'];
+                const COLORS = ['#c87941','#5a9e8f','#d4725a','#7a9e5a','#9b7ec8','#d4b45a','#6b8fae','#c45a7a'];
                 return (
                   <div key={word} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
                     <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[i % COLORS.length], flexShrink: 0 }} />

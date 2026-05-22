@@ -2,6 +2,24 @@ import React, { useRef, useCallback } from 'react';
 import { formatDayLabel, parseHoursFromTimes } from '../lib/dates.js';
 import BulletInput from './BulletInput.jsx';
 
+function normalizeTime(raw) {
+  const s = raw.trim();
+  if (!s) return s;
+  const match = s.match(/^(\d{1,2})(?::(\d{2}))?\s*([aApP][mM]?)?$/);
+  if (!match) return s;
+  let h = parseInt(match[1], 10);
+  const m = match[2] ? match[2].padStart(2, '0') : '00';
+  const ind = (match[3] || '').toLowerCase();
+  let period;
+  if (ind.startsWith('p')) period = 'PM';
+  else if (ind.startsWith('a')) period = 'AM';
+  else if (h >= 13 && h <= 23) { period = 'PM'; h -= 12; }
+  else if (h === 0) { period = 'AM'; h = 12; }
+  else if (h === 12) { period = 'PM'; }
+  else { period = 'AM'; }
+  return `${h}:${m} ${period}`;
+}
+
 export default function DayEntry({ date, entry, onChange }) {
   const label = formatDayLabel(date);
   const initialSession = useRef({ id: crypto.randomUUID(), startTime: '', endTime: '', bullets: [] });
@@ -70,6 +88,7 @@ export default function DayEntry({ date, entry, onChange }) {
                   placeholder="9:00 AM"
                   value={session.startTime}
                   onChange={(e) => updateSession(idx, 'startTime', e.target.value)}
+                  onBlur={(e) => { const n = normalizeTime(e.target.value); if (n !== e.target.value) updateSession(idx, 'startTime', n); }}
                   style={inputStyle}
                 />
               </label>
@@ -87,6 +106,7 @@ export default function DayEntry({ date, entry, onChange }) {
                   placeholder="5:00 PM"
                   value={session.endTime}
                   onChange={(e) => updateSession(idx, 'endTime', e.target.value)}
+                  onBlur={(e) => { const n = normalizeTime(e.target.value); if (n !== e.target.value) updateSession(idx, 'endTime', n); }}
                   style={inputStyle}
                 />
               </label>
