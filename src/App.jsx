@@ -402,14 +402,23 @@ export default function App() {
             )}
 
             {hasEntries && !submitted && (
-              <button onClick={() => setShowEmail(true)} style={{
-                width: '100%', background: 'var(--accent)', color: '#fff', border: 'none',
-                borderRadius: 12, padding: '15px 20px', fontSize: 16, fontWeight: 700,
-                cursor: 'pointer', letterSpacing: '-0.01em',
-                boxShadow: '0 4px 20px rgba(108,143,255,0.3)',
-              }}>
-                Generate Email Draft
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button onClick={() => setShowEmail(true)} style={{
+                  width: '100%', background: 'var(--accent)', color: '#fff', border: 'none',
+                  borderRadius: 12, padding: '15px 20px', fontSize: 16, fontWeight: 700,
+                  cursor: 'pointer', letterSpacing: '-0.01em',
+                  boxShadow: '0 4px 20px rgba(200,121,65,0.25)',
+                }}>
+                  Generate Email Draft
+                </button>
+                <button onClick={handleSubmitted} style={{
+                  width: '100%', background: 'none', color: 'var(--text-muted)',
+                  border: '1px solid var(--border)', borderRadius: 12,
+                  padding: '12px 20px', fontSize: 13, cursor: 'pointer',
+                }}>
+                  Already sent — Mark as Submitted
+                </button>
+              </div>
             )}
 
             <div style={{ paddingBottom: 40 }} />

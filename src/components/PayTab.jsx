@@ -48,18 +48,18 @@ function Stat({ label, value, accent, muted }) {
   );
 }
 
-function LogPaycheckForm({ currentPeriod, onSave, onCancel }) {
-  const [amount, setAmount] = useState('');
-  const [periodStart, setPeriodStart] = useState(() => currentPeriod.start.toISOString().slice(0, 10));
-  const [periodEnd, setPeriodEnd] = useState(() => currentPeriod.end.toISOString().slice(0, 10));
-  const [notes, setNotes] = useState('');
+function LogPaycheckForm({ currentPeriod, onSave, onCancel, existing }) {
+  const [amount, setAmount] = useState(() => existing ? String(existing.amount) : '');
+  const [periodStart, setPeriodStart] = useState(() => existing ? existing.periodStart : currentPeriod.start.toISOString().slice(0, 10));
+  const [periodEnd, setPeriodEnd] = useState(() => existing ? existing.periodEnd : currentPeriod.end.toISOString().slice(0, 10));
+  const [notes, setNotes] = useState(() => existing ? existing.notes : '');
 
   const save = () => {
     if (!amount || isNaN(parseFloat(amount))) return;
     const hrs = getHoursInPeriod(new Date(periodStart), new Date(periodEnd));
     savePaycheck({
-      id: crypto.randomUUID(),
-      date: new Date().toISOString().slice(0, 10),
+      id: existing ? existing.id : crypto.randomUUID(),
+      date: existing ? existing.date : new Date().toISOString().slice(0, 10),
       amount: parseFloat(amount),
       periodStart,
       periodEnd,
@@ -73,7 +73,9 @@ function LogPaycheckForm({ currentPeriod, onSave, onCancel }) {
 
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '14px', marginBottom: 16 }}>
-      <p style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 600, color: 'var(--text)', fontFamily: 'var(--serif)' }}>Log Paycheck</p>
+      <p style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 600, color: 'var(--text)', fontFamily: 'var(--serif)' }}>
+        {existing ? 'Edit Paycheck' : 'Log Paycheck'}
+      </p>
 
       <label style={{ display: 'block', marginBottom: 10 }}>
         <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Amount received ($)</span>
@@ -106,6 +108,7 @@ function LogPaycheckForm({ currentPeriod, onSave, onCancel }) {
 
 export default function PayTab({ settings }) {
   const [showForm, setShowForm] = useState(false);
+  const [editingPaycheck, setEditingPaycheck] = useState(null);
   const [refresh, setRefresh] = useState(0);
 
   const currentPeriod = useMemo(() => getCurrentPayPeriod(), [refresh]);
@@ -118,7 +121,8 @@ export default function PayTab({ settings }) {
   const totalPaid = paychecks.reduce((sum, p) => sum + p.amount, 0);
   const totalHoursPaid = paychecks.reduce((sum, p) => sum + p.hoursLogged, 0);
 
-  const onSave = () => { setShowForm(false); setRefresh(r => r + 1); };
+  const onSave = () => { setShowForm(false); setEditingPaycheck(null); setRefresh(r => r + 1); };
+  const onCancel = () => { setShowForm(false); setEditingPaycheck(null); };
 
   return (
     <div style={{ padding: '8px 0 60px' }}>
@@ -132,11 +136,12 @@ export default function PayTab({ settings }) {
         </p>
       )}
 
-      {showForm ? (
+      {(showForm || editingPaycheck) ? (
         <LogPaycheckForm
           currentPeriod={currentPeriod}
+          existing={editingPaycheck}
           onSave={onSave}
-          onCancel={() => setShowForm(false)}
+          onCancel={onCancel}
         />
       ) : (
         <button
@@ -172,11 +177,15 @@ export default function PayTab({ settings }) {
                   {p.notes && <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic' }}>{p.notes}</p>}
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={{ margin: '0 0 4px', fontSize: 11, color: 'var(--text-muted)' }}>Received</p>
-                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text)' }}>{p.date}</p>
-                  <button onClick={() => { deletePaycheck(p.id); setRefresh(r => r + 1); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 11, marginTop: 4, padding: 0 }}>
-                    remove
-                  </button>
+                  <p style={{ margin: '0 0 4px', fontSize: 11, color: 'var(--text-muted)' }}>Received {p.date}</p>
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+                    <button onClick={() => setEditingPaycheck(p)} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 11, padding: 0 }}>
+                      edit
+                    </button>
+                    <button onClick={() => { deletePaycheck(p.id); setRefresh(r => r + 1); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 11, padding: 0 }}>
+                      remove
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
