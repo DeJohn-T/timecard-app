@@ -78,6 +78,18 @@ export default function SettingsPage({ settings, onSave, onClose }) {
           </select>
         </Field>
 
+        <Field label="Hourly rate ($/hr)">
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="25.00"
+            value={form.hourlyRate || ''}
+            onChange={(e) => update('hourlyRate', e.target.value)}
+            style={inputStyle}
+          />
+        </Field>
+
         <Field label="Auto-send mode">
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
             <input
