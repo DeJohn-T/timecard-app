@@ -1,21 +1,19 @@
-import { formatDayLabel } from './dates.js';
+import { formatDayLabel, getDateKey } from './dates.js';
 
 export async function generateEmail({ entries, weekDates, settings }) {
   const { myName, apiKey } = settings;
 
   const entryLines = weekDates
     .map((date) => {
-      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      const key = getDateKey(date);
       const entry = entries[key];
-      const bullets = entry?.bullets || (entry?.notes ? [entry.notes] : []);
-      if (!entry || (bullets.length === 0 && !entry.hours && !entry.startTime)) return null;
-      return {
-        label: formatDayLabel(date),
-        bullets,
-        startTime: entry.startTime || '',
-        endTime: entry.endTime || '',
-        hours: entry.hours || '',
-      };
+      if (!entry) return null;
+      const sessions = entry.sessions || [];
+      const hasContent =
+        sessions.some((s) => s.bullets?.length > 0 || s.startTime) ||
+        parseFloat(entry.hours) > 0;
+      if (!hasContent) return null;
+      return { label: formatDayLabel(date), sessions, hours: entry.hours || '' };
     })
     .filter(Boolean);
 
@@ -24,9 +22,12 @@ export async function generateEmail({ entries, weekDates, settings }) {
   const rawData = entryLines
     .map((e) => {
       const lines = [`Day: ${e.label}`];
-      if (e.startTime && e.endTime) lines.push(`Time: ${e.startTime} - ${e.endTime}`);
-      else if (e.hours) lines.push(`Hours: ${e.hours}`);
-      if (e.bullets.length > 0) lines.push(`Work done:\n${e.bullets.map((b) => `- ${b}`).join('\n')}`);
+      e.sessions.forEach((s, i) => {
+        const prefix = e.sessions.length > 1 ? `Session ${i + 1}` : 'Session';
+        if (s.startTime && s.endTime) lines.push(`${prefix} time: ${s.startTime} - ${s.endTime}`);
+        if (s.bullets?.length > 0) lines.push(`${prefix} work:\n${s.bullets.map((b) => `- ${b}`).join('\n')}`);
+      });
+      if (e.hours && !e.sessions.some((s) => s.startTime)) lines.push(`Hours: ${e.hours}`);
       return lines.join('\n');
     })
     .join('\n\n');
@@ -35,25 +36,24 @@ export async function generateEmail({ entries, weekDates, settings }) {
 
 Rules:
 - Use ONLY hyphens (-), never em dashes (—)
-- Day format: "Monday (4/20) - X.X hours"
-- Time format: "11:00 AM - 8:00 PM CT" on its own line after the day header (if times given)
+- Day header format: "DayName (M/D) - X.X hours"
+- Time format: "HH:MM AM - HH:MM PM CT" on its own line after the day header
+- If a day has multiple sessions, list each session's time range on its own line with bullets under it
 - Bullet points use "- " prefix
-- Calculate hours from start/end times if given (e.g., 11 AM to 8 PM = 9.0 hours). If only hours number given, use it directly.
-- Format hours to one decimal (e.g., 8.0, 10.5, 9.33)
+- Calculate total hours from all session start/end times. Format to one decimal (e.g. 8.0, 10.5)
 - Omit days with no work
-- Keep bullet content concise but specific
 - Total hours at end
 
 Email structure (follow EXACTLY):
 Hi All,
 
-Hope your day is well. Here is my work log for this week:
+Please find my work log for the week below:
 
 [each day worked, in chronological order]
 [DayName (M/D) - X.X hours]
-[HH:MM AM - HH:MM PM CT]  <-- only if times were provided
+[HH:MM AM - HH:MM PM CT]
 - [bullet 1]
-- [bullet 2 if applicable]
+- [bullet 2]
 
 Total Hours: [sum]
 
