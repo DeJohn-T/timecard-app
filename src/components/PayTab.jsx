@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   getCurrentPayPeriod, getPreviousPayPeriod,
   getHoursInPeriod, getPaychecks, savePaycheck,
-  deletePaycheck, formatCurrency,
+  deletePaycheck, formatCurrency, getTotalLoggedHours,
 } from '../lib/payStorage.js';
 
 function fmtDate(date) {
@@ -10,7 +10,7 @@ function fmtDate(date) {
 }
 
 function PeriodCard({ period, hoursLogged, hourlyRate, label }) {
-  const estimated = hourlyRate && hoursLogged ? Math.min(hoursLogged, 40) * parseFloat(hourlyRate) : null;
+  const estimated = hourlyRate && hoursLogged ? hoursLogged * parseFloat(hourlyRate) : null;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const daysLeft = Math.max(0, Math.round((period.end - today) / 86400000));
 
@@ -120,6 +120,8 @@ export default function PayTab({ settings }) {
 
   const totalPaid = paychecks.reduce((sum, p) => sum + p.amount, 0);
   const totalHoursPaid = paychecks.reduce((sum, p) => sum + p.hoursLogged, 0);
+  const totalLoggedHours = useMemo(() => getTotalLoggedHours(), [refresh]);
+  const hoursBehind = Math.max(0, totalLoggedHours - totalHoursPaid);
 
   const onSave = () => { setShowForm(false); setEditingPaycheck(null); setRefresh(r => r + 1); };
   const onCancel = () => { setShowForm(false); setEditingPaycheck(null); };
@@ -129,6 +131,31 @@ export default function PayTab({ settings }) {
 
       <PeriodCard period={currentPeriod} hoursLogged={currentHours} hourlyRate={hourlyRate} label="Current period" />
       <PeriodCard period={prevPeriod} hoursLogged={prevHours} hourlyRate={hourlyRate} label="Previous period" />
+
+      {/* Outstanding hours card */}
+      <div style={{
+        background: hoursBehind > 0 ? 'rgba(200,121,65,0.08)' : 'var(--surface)',
+        border: `1.5px solid ${hoursBehind > 0 ? 'rgba(200,121,65,0.35)' : 'var(--border)'}`,
+        borderRadius: 14, padding: '14px 16px', marginBottom: 12,
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      }}>
+        <div>
+          <p style={{ margin: 0, fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Hours not yet paid</p>
+          <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
+            {totalLoggedHours.toFixed(1)}h logged · {totalHoursPaid.toFixed(1)}h paid
+          </p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ margin: 0, fontSize: 24, fontWeight: 700, fontFamily: 'var(--serif)', color: hoursBehind > 0 ? 'var(--accent)' : 'var(--success)', lineHeight: 1 }}>
+            {hoursBehind > 0 ? `${hoursBehind.toFixed(1)}h` : '✓'}
+          </p>
+          {hoursBehind > 0 && hourlyRate && (
+            <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--text-muted)' }}>
+              ≈ {formatCurrency(hoursBehind * parseFloat(hourlyRate))}
+            </p>
+          )}
+        </div>
+      </div>
 
       {!hourlyRate && (
         <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16 }}>
@@ -178,12 +205,12 @@ export default function PayTab({ settings }) {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={{ margin: '0 0 4px', fontSize: 11, color: 'var(--text-muted)' }}>Received {p.date}</p>
-                  <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
-                    <button onClick={() => setEditingPaycheck(p)} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 11, padding: 0 }}>
-                      edit
+                  <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', marginTop: 6 }}>
+                    <button onClick={() => setEditingPaycheck(p)} style={{ background: 'var(--accent-dim)', border: '1px solid rgba(200,121,65,0.3)', color: 'var(--accent)', cursor: 'pointer', fontSize: 11, padding: '3px 10px', borderRadius: 6, fontWeight: 600 }}>
+                      Edit
                     </button>
-                    <button onClick={() => { deletePaycheck(p.id); setRefresh(r => r + 1); }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 11, padding: 0 }}>
-                      remove
+                    <button onClick={() => { deletePaycheck(p.id); setRefresh(r => r + 1); }} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 11, padding: '3px 10px', borderRadius: 6 }}>
+                      Remove
                     </button>
                   </div>
                 </div>

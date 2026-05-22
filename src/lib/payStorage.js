@@ -88,3 +88,10 @@ export function deletePaycheck(id) {
 export function formatCurrency(amount) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 }
+
+export function getTotalLoggedHours() {
+  const allWeeks = getAllWeeksWithEntries();
+  return allWeeks.reduce((sum, { entries }) =>
+    sum + Object.values(entries).reduce((s, e) => s + calcEntryHoursLocal(e), 0), 0
+  );
+}
