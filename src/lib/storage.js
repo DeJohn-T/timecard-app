@@ -21,9 +21,29 @@ export function saveSettings(settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
+export function migrateEntry(entry) {
+  if (!entry) return entry;
+  if (entry.sessions) return entry;
+  const bullets = entry.bullets || (entry.notes ? [entry.notes] : []);
+  return {
+    sessions: [{
+      id: crypto.randomUUID(),
+      startTime: entry.startTime || '',
+      endTime: entry.endTime || '',
+      bullets,
+    }],
+    hours: entry.hours || '',
+  };
+}
+
 export function getEntries(weekKey) {
   try {
-    return JSON.parse(localStorage.getItem(`timecard-entries-${weekKey}`) || '{}');
+    const raw = JSON.parse(localStorage.getItem(`timecard-entries-${weekKey}`) || '{}');
+    const migrated = {};
+    for (const [key, entry] of Object.entries(raw)) {
+      migrated[key] = migrateEntry(entry);
+    }
+    return migrated;
   } catch {
     return {};
   }
@@ -64,17 +84,56 @@ export function getAllSubmittedWeeks() {
   }
 }
 
-export function getAllEntriesAcrossWeeks() {
+export function getAllWeeksWithEntries() {
   const weeks = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && key.startsWith('timecard-entries-')) {
       try {
         const weekKey = key.replace('timecard-entries-', '');
-        const entries = JSON.parse(localStorage.getItem(key) || '{}');
+        const raw = JSON.parse(localStorage.getItem(key) || '{}');
+        const entries = {};
+        for (const [dk, entry] of Object.entries(raw)) {
+          entries[dk] = migrateEntry(entry);
+        }
         weeks.push({ weekKey, entries });
       } catch {}
     }
   }
+  weeks.sort((a, b) => b.weekKey.localeCompare(a.weekKey));
   return weeks;
+}
+
+export function getWeekNote(weekKey) {
+  return localStorage.getItem(`timecard-weeknote-${weekKey}`) || '';
+}
+
+export function saveWeekNote(weekKey, note) {
+  if (note) {
+    localStorage.setItem(`timecard-weeknote-${weekKey}`, note);
+  } else {
+    localStorage.removeItem(`timecard-weeknote-${weekKey}`);
+  }
+}
+
+export function computeStreak(allWeeks) {
+  if (!allWeeks.length) return 0;
+  let streak = 0;
+  for (const { entries } of allWeeks) {
+    const hasAny = Object.values(entries).some((e) => {
+      if (!e) return false;
+      const sessionHours = (e.sessions || []).some(
+        (s) => s.bullets?.length > 0 || s.startTime || s.endTime
+      );
+      return sessionHours || parseFloat(e.hours) > 0;
+    });
+    if (!hasAny) break;
+    streak++;
+  }
+  return streak;
+}
+
+// kept for any external callers — delegates to getAllWeeksWithEntries
+export function getAllEntriesAcrossWeeks() {
+  return getAllWeeksWithEntries();
 }
