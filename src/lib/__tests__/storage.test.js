@@ -100,3 +100,21 @@ describe('computeStreak', () => {
     expect(computeStreak(weeks)).toBe(1);
   });
 });
+
+import { getCurrentPayPeriod } from '../payStorage.js';
+
+describe('getCurrentPayPeriod', () => {
+  it('returns first half for day <= 15', () => {
+    const period = getCurrentPayPeriod(new Date(2026, 4, 10));
+    expect(period.start.getDate()).toBe(1);
+    expect(period.end.getDate()).toBe(15);
+    expect(period.payDate.getDate()).toBe(15);
+  });
+
+  it('returns second half for day > 15', () => {
+    const period = getCurrentPayPeriod(new Date(2026, 4, 22));
+    expect(period.start.getDate()).toBe(16);
+    expect(period.end.getDate()).toBe(30);
+    expect(period.payDate.getDate()).toBe(30);
+  });
+});

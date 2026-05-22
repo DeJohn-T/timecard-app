@@ -7,6 +7,7 @@ export const DEFAULT_SETTINGS = {
   apiKey: '',
   autoSend: false,
   timezone: 'America/Chicago',
+  hourlyRate: '',
 };
 
 export function getSettings() {
