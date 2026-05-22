@@ -7,6 +7,7 @@ export default function EmailPreview({ entries, weekDates, settings, weekKey, on
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [generated, setGenerated] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const generate = async () => {
     setLoading(true);
@@ -30,6 +31,23 @@ export default function EmailPreview({ entries, weekDates, settings, weekKey, on
       .filter(Boolean);
     openMailto(recipients, subject, emailBody);
     onSubmitted();
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(emailBody);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = emailBody;
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -79,11 +97,14 @@ export default function EmailPreview({ entries, weekDates, settings, weekKey, on
             <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
               Edit above if needed. "Send" opens your email client pre-filled.
             </p>
-            <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
               <button onClick={generate} disabled={loading} style={secondaryBtnStyle}>
                 {loading ? '...' : 'Regenerate'}
               </button>
-              <button onClick={send} style={{ ...primaryBtnStyle, flex: 1 }}>
+              <button onClick={copyToClipboard} style={secondaryBtnStyle}>
+                {copied ? '✓ Copied!' : 'Copy'}
+              </button>
+              <button onClick={send} style={{ ...primaryBtnStyle, flex: 1, minWidth: 140 }}>
                 Send via Email Client
               </button>
             </div>
