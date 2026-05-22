@@ -4,6 +4,8 @@ import DayEntry from './components/DayEntry.jsx';
 import EmailPreview from './components/EmailPreview.jsx';
 import SettingsPage from './components/SettingsPage.jsx';
 import Dashboard from './components/Dashboard.jsx';
+import ImportSheet from './components/ImportSheet.jsx';
+import PayTab from './components/PayTab.jsx';
 import {
   getWeekDates, getWeekKey, getDateKey, formatWeekRange,
   parseHoursFromTimes, isTodayFridayAfter8AM, isToday,
@@ -54,6 +56,7 @@ export default function App() {
   const [submitted, setSubmitted] = useState(() => isWeekSubmitted(weekKey));
   const [fridayBanner, setFridayBanner] = useState(false);
   const [view, setView] = useState('log');
+  const [showImport, setShowImport] = useState(false);
   const saveTimer = useRef({});
 
   const canvasRef = useRef(null);
@@ -190,6 +193,16 @@ export default function App() {
     saveWeekNote(weekKey, note);
   };
 
+  const handleImported = (importedWeekKey) => {
+    const importedStart = importedWeekKey.replace('week-', '');
+    const [iy, im, id] = importedStart.split('-').map(Number);
+    const importedDate = new Date(iy, im - 1, id);
+    const currentStart = getWeekDates()[0];
+    const offset = Math.max(0, Math.round((currentStart - importedDate) / (7 * 86400000)));
+    setWeekOffset(offset);
+    setView('log');
+  };
+
   const fmtH = (h) => (h % 1 === 0 ? `${h}.0` : h.toFixed(2).replace(/0+$/, ''));
 
   return (
@@ -261,6 +274,11 @@ export default function App() {
               >›</button>
             </div>
           </div>
+          <button onClick={() => setShowImport(true)} style={{
+            background: 'var(--surface2)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '7px 10px', cursor: 'pointer',
+            fontSize: 16, lineHeight: 1, color: 'var(--text-muted)', marginRight: 6,
+          }} title="Import week">⬆️</button>
           <button onClick={() => setShowSettings(true)} style={{
             background: 'var(--surface2)', border: '1px solid var(--border)',
             borderRadius: 8, padding: '7px 10px', cursor: 'pointer',
@@ -272,16 +290,16 @@ export default function App() {
       <div style={{ padding: '12px 16px', flex: 1 }}>
         {/* Tab nav */}
         <div style={{ display: 'flex', gap: 4, marginBottom: 14, background: 'var(--surface)', borderRadius: 10, padding: 4 }}>
-          {['log', 'dashboard'].map((tab) => (
+          {[['log', '📋 Log'], ['dashboard', '📊 Dashboard'], ['pay', '💵 Pay']].map(([tab, label]) => (
             <button key={tab} onClick={() => setView(tab)} style={{
               flex: 1, padding: '8px 0', borderRadius: 7, border: 'none',
               background: view === tab ? 'var(--surface2)' : 'transparent',
               color: view === tab ? 'var(--text)' : 'var(--text-muted)',
               fontWeight: view === tab ? 600 : 400,
-              fontSize: 14, cursor: 'pointer',
+              fontSize: 13, cursor: 'pointer',
               boxShadow: view === tab ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
             }}>
-              {tab === 'log' ? '📋 Log' : '📊 Dashboard'}
+              {label}
             </button>
           ))}
         </div>
@@ -396,8 +414,10 @@ export default function App() {
 
             <div style={{ paddingBottom: 40 }} />
           </>
-        ) : (
+        ) : view === 'dashboard' ? (
           <Dashboard currentWeekHours={totalHours} currentWeekKey={weekKey} onWeekSelect={handleWeekSelect} />
+        ) : (
+          <PayTab settings={settings} />
         )}
       </div>
 
@@ -417,6 +437,14 @@ export default function App() {
           settings={settings}
           onSave={(s) => { setSettings(s); setShowSettings(false); }}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showImport && (
+        <ImportSheet
+          settings={settings}
+          onImported={handleImported}
+          onClose={() => setShowImport(false)}
         />
       )}
     </div>
