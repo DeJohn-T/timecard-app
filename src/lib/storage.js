@@ -138,3 +138,22 @@ export function computeStreak(allWeeks) {
 export function getAllEntriesAcrossWeeks() {
   return getAllWeeksWithEntries();
 }
+
+export function exportAllData() {
+  const data = {};
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('timecard')) {
+      data[key] = localStorage.getItem(key);
+    }
+  }
+  return data;
+}
+
+export function importAllData(data) {
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof key === 'string' && key.startsWith('timecard') && typeof value === 'string') {
+      localStorage.setItem(key, value);
+    }
+  }
+}

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { saveSettings } from '../lib/storage.js';
+import React, { useState, useRef } from 'react';
+import { saveSettings, exportAllData, importAllData } from '../lib/storage.js';
 
 export default function SettingsPage({ settings, onSave, onClose }) {
   const [form, setForm] = useState({ ...settings });
   const [saved, setSaved] = useState(false);
+  const [importMsg, setImportMsg] = useState('');
+  const importRef = useRef(null);
 
   const update = (field, value) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -11,6 +13,36 @@ export default function SettingsPage({ settings, onSave, onClose }) {
     saveSettings(form);
     setSaved(true);
     setTimeout(() => { setSaved(false); onSave(form); }, 800);
+  };
+
+  const handleExport = () => {
+    const data = exportAllData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `timecard-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        const keyCount = Object.keys(data).filter(k => k.startsWith('timecard')).length;
+        if (keyCount === 0) { setImportMsg('No timecard data found in file.'); return; }
+        importAllData(data);
+        setImportMsg(`✓ Restored ${keyCount} data keys. Reload to see changes.`);
+      } catch {
+        setImportMsg('Invalid backup file — could not parse JSON.');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   return (
@@ -104,7 +136,27 @@ export default function SettingsPage({ settings, onSave, onClose }) {
           </label>
         </Field>
 
-        <button onClick={save} style={{ ...primaryBtnStyle, width: '100%', marginTop: 8 }}>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 4 }}>
+          <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-muted)' }}>
+            Data backup — export saves everything to a file. Import restores from a previous export.
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={handleExport} style={{ flex: 1, background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 8, padding: '11px', fontSize: 14, cursor: 'pointer' }}>
+              ⬇️ Export Backup
+            </button>
+            <button onClick={() => importRef.current?.click()} style={{ flex: 1, background: 'var(--surface2)', color: 'var(--text)', border: '1px solid var(--border)', borderRadius: 8, padding: '11px', fontSize: 14, cursor: 'pointer' }}>
+              ⬆️ Import Backup
+            </button>
+            <input ref={importRef} type="file" accept=".json" style={{ display: 'none' }} onChange={handleImport} />
+          </div>
+          {importMsg && (
+            <p style={{ margin: '8px 0 0', fontSize: 12, color: importMsg.startsWith('✓') ? 'var(--success)' : 'var(--error)' }}>
+              {importMsg}
+            </p>
+          )}
+        </div>
+
+        <button onClick={save} style={{ ...primaryBtnStyle, width: '100%', marginTop: 16 }}>
           {saved ? 'Saved!' : 'Save Settings'}
         </button>
       </div>
