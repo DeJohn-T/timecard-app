@@ -43,6 +43,7 @@ export default function App() {
   const [weekOffset, setWeekOffset] = useState(0);
   const weekDates = getWeekDates(new Date(Date.now() - weekOffset * 7 * 86400000));
   const weekKey = getWeekKey(weekDates);
+  const [weekNote, setWeekNote] = useState(() => getWeekNote(weekKey));
 
   const todayIndex = weekDates.findIndex(isToday);
   const [selectedIndex, setSelectedIndex] = useState(todayIndex >= 0 ? todayIndex : 0);
@@ -136,6 +137,7 @@ export default function App() {
   useEffect(() => {
     setEntries(getEntries(weekKey));
     setSubmitted(isWeekSubmitted(weekKey));
+    setWeekNote(getWeekNote(weekKey));
     const idx = weekDates.findIndex(isToday);
     setSelectedIndex(idx >= 0 ? idx : 0);
   }, [weekKey]);
@@ -181,6 +183,11 @@ export default function App() {
   const handleWeekSelect = (offset) => {
     setWeekOffset(offset);
     setView('log');
+  };
+
+  const handleWeekNoteChange = (note) => {
+    setWeekNote(note);
+    saveWeekNote(weekKey, note);
   };
 
   const fmtH = (h) => (h % 1 === 0 ? `${h}.0` : h.toFixed(2).replace(/0+$/, ''));
@@ -343,6 +350,28 @@ export default function App() {
                 onChange={(entry) => handleEntryChange(selectedKey, entry)}
               />
             </div>
+
+            <textarea
+              value={weekNote}
+              onChange={(e) => handleWeekNoteChange(e.target.value)}
+              placeholder="Week note (private, not in email)..."
+              rows={2}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                borderTop: '1px solid var(--border)',
+                padding: '10px 0',
+                color: 'var(--text-muted)',
+                fontSize: 13,
+                resize: 'none',
+                outline: 'none',
+                fontFamily: 'var(--serif)',
+                fontStyle: 'italic',
+                lineHeight: 1.5,
+                marginBottom: 4,
+              }}
+            />
 
             {/* Empty state nudge */}
             {!hasEntries && (
