@@ -8,7 +8,7 @@ import {
   getWeekDates, getWeekKey, getDateKey, formatWeekRange,
   parseHoursFromTimes, isTodayFridayAfter8AM, isToday,
 } from './lib/dates.js';
-import { getEntries, saveEntry, isWeekSubmitted, markWeekSubmitted, getSettings } from './lib/storage.js';
+import { getEntries, saveEntry, isWeekSubmitted, markWeekSubmitted, getSettings, getWeekNote, saveWeekNote } from './lib/storage.js';
 
 function isPayday() {
   const d = new Date().getDate();
@@ -40,7 +40,8 @@ const GREETINGS = [
 ];
 
 export default function App() {
-  const weekDates = getWeekDates();
+  const [weekOffset, setWeekOffset] = useState(0);
+  const weekDates = getWeekDates(new Date(Date.now() - weekOffset * 7 * 86400000));
   const weekKey = getWeekKey(weekDates);
 
   const todayIndex = weekDates.findIndex(isToday);
@@ -132,6 +133,13 @@ export default function App() {
     }
   }, []);
 
+  useEffect(() => {
+    setEntries(getEntries(weekKey));
+    setSubmitted(isWeekSubmitted(weekKey));
+    const idx = weekDates.findIndex(isToday);
+    setSelectedIndex(idx >= 0 ? idx : 0);
+  }, [weekKey]);
+
   const handleEntryChange = useCallback((dateKey, entry) => {
     setEntries((prev) => ({ ...prev, [dateKey]: entry }));
     clearTimeout(saveTimer.current[dateKey]);
@@ -142,12 +150,21 @@ export default function App() {
 
   const totalHours = Object.values(entries).reduce((sum, e) => {
     if (!e) return sum;
-    if (e.startTime && e.endTime) return sum + (parseHoursFromTimes(e.startTime, e.endTime) || 0);
+    const sessionHours = (e.sessions || []).reduce((s, session) => {
+      if (session.startTime && session.endTime) {
+        return s + (parseHoursFromTimes(session.startTime, session.endTime) || 0);
+      }
+      return s;
+    }, 0);
+    if (sessionHours > 0) return sum + sessionHours;
     return sum + (parseFloat(e.hours) || 0);
   }, 0);
 
   const hasEntries = Object.values(entries).some(
-    (e) => e && (e.bullets?.length > 0 || e.notes?.trim() || e.startTime || e.hours)
+    (e) => e && (
+      e.sessions?.some((s) => s.bullets?.length > 0 || s.startTime) ||
+      parseFloat(e.hours) > 0
+    )
   );
 
   const selectedDate = weekDates[selectedIndex];
@@ -159,6 +176,11 @@ export default function App() {
     setSubmitted(true);
     setShowEmail(false);
     setFridayBanner(false);
+  };
+
+  const handleWeekSelect = (offset) => {
+    setWeekOffset(offset);
+    setView('log');
   };
 
   const fmtH = (h) => (h % 1 === 0 ? `${h}.0` : h.toFixed(2).replace(/0+$/, ''));
@@ -194,7 +216,7 @@ export default function App() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <h1 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.02em' }}>
+              <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em', fontFamily: 'var(--serif)' }}>
                 Timecard
               </h1>
               {totalHours > 0 && view === 'log' && (
@@ -207,16 +229,30 @@ export default function App() {
                 </span>
               )}
             </div>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
-              {formatWeekRange(weekDates)}
-              <span style={{
-                marginLeft: 8,
-                fontWeight: 700,
-                color: payday ? 'var(--pay)' : daysUntilPay <= 3 ? 'var(--pay)' : 'var(--text-muted)',
-              }}>
-                · {payday ? '💰 Payday Today' : `Payday in ${daysUntilPay}d`}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '4px 0 0' }}>
+              <button
+                onClick={() => setWeekOffset((o) => o + 1)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 18, lineHeight: 1, padding: '0 2px' }}
+              >‹</button>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                {formatWeekRange(weekDates)}
+                {weekOffset > 0 && (
+                  <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--text-muted)', opacity: 0.6 }}>past</span>
+                )}
+                <span style={{
+                  marginLeft: 8,
+                  fontWeight: 700,
+                  color: payday ? 'var(--pay)' : daysUntilPay <= 3 ? 'var(--pay)' : 'var(--text-muted)',
+                }}>
+                  · {payday ? '💰 Payday Today' : `Payday in ${daysUntilPay}d`}
+                </span>
               </span>
-            </p>
+              <button
+                onClick={() => setWeekOffset((o) => Math.max(0, o - 1))}
+                disabled={weekOffset === 0}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: weekOffset === 0 ? 'default' : 'pointer', fontSize: 18, lineHeight: 1, padding: '0 2px', opacity: weekOffset === 0 ? 0.25 : 1 }}
+              >›</button>
+            </div>
           </div>
           <button onClick={() => setShowSettings(true)} style={{
             background: 'var(--surface2)', border: '1px solid var(--border)',
@@ -277,7 +313,10 @@ export default function App() {
               {weekDates.map((date, i) => {
                 const dk = getDateKey(date);
                 const e = entries[dk];
-                const hasDot = !!(e?.bullets?.length > 0 || e?.notes?.trim() || e?.hours || e?.startTime);
+                const hasDot = !!(
+                  e?.sessions?.some((s) => s.bullets?.length > 0 || s.startTime) ||
+                  parseFloat(e?.hours) > 0
+                );
                 return (
                   <DayButton
                     key={i}
@@ -329,7 +368,7 @@ export default function App() {
             <div style={{ paddingBottom: 40 }} />
           </>
         ) : (
-          <Dashboard currentWeekHours={totalHours} currentWeekKey={weekKey} />
+          <Dashboard currentWeekHours={totalHours} currentWeekKey={weekKey} onWeekSelect={handleWeekSelect} />
         )}
       </div>
 
