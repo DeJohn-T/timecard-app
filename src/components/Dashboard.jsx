@@ -191,7 +191,7 @@ export default function Dashboard({ currentWeekHours, currentWeekKey }) {
               );
             })}
           </div>
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>Blue = submitted</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 8 }}>Amber = submitted</p>
         </section>
       )}
 
