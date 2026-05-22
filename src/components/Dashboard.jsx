@@ -12,18 +12,37 @@ function calcEntryHours(entry) {
   return parseFloat(entry.hours) || 0;
 }
 
-function extractBullets(allWeeks) {
-  const bullets = [];
+function analyzeActivities(allWeeks, n = 8) {
+  const cats = {};
   for (const { entries } of allWeeks) {
     for (const entry of Object.values(entries)) {
       if (!entry) continue;
-      for (const s of (entry.sessions || [])) {
-        if (s.bullets) bullets.push(...s.bullets);
+      const sessions = entry.sessions || [];
+      const manualHrs = parseFloat(entry.hours) || 0;
+      for (const session of sessions) {
+        const hrs = (session.startTime && session.endTime)
+          ? (parseHoursFromTimes(session.startTime, session.endTime) || 0)
+          : manualHrs / Math.max(sessions.length, 1);
+        const bullets = session.bullets || [];
+        if (!bullets.length) continue;
+        const hrsPerBullet = hrs / bullets.length;
+        for (const bullet of bullets) {
+          const words = bullet.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/)
+            .filter(w => w.length >= 3 && !STOP_WORDS.has(w));
+          if (!words.length) continue;
+          for (const raw of words) {
+            const key = (raw.endsWith('s') && !raw.endsWith('ss') && raw.length > 3) ? raw.slice(0, -1) : raw;
+            if (!cats[key]) cats[key] = { label: key[0].toUpperCase() + key.slice(1), count: 0, hours: 0 };
+            cats[key].count++;
+            cats[key].hours += hrsPerBullet / words.length;
+          }
+        }
       }
-      if (entry.notes) bullets.push(entry.notes);
     }
   }
-  return bullets;
+  const sorted = Object.values(cats).sort((a, b) => b.hours - a.hours || b.count - a.count);
+  const totalHours = sorted.reduce((sum, c) => sum + c.hours, 0);
+  return { categories: sorted.slice(0, n), totalHours };
 }
 
 function weekKeyToOffset(weekKey) {
@@ -58,18 +77,6 @@ const STOP_WORDS = new Set([
   'been','has','their','them','they','he','she','his','her','worked','work',
   'working','created','added','updated','fixed','made','got','set','put','use',
 ]);
-
-function topKeywords(bullets, n = 8) {
-  const freq = {};
-  for (const b of bullets) {
-    const words = b.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/);
-    for (const w of words) {
-      if (w.length < 3 || STOP_WORDS.has(w)) continue;
-      freq[w] = (freq[w] || 0) + 1;
-    }
-  }
-  return Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, n);
-}
 
 function getNextPayday() {
   const now = new Date();
@@ -179,7 +186,7 @@ export default function Dashboard({ currentWeekHours, currentWeekKey, onWeekSele
     [allWeeks, submittedWeeks]
   );
 
-  const keywords = useMemo(() => topKeywords(extractBullets(allWeeks)), [allWeeks]);
+  const activityData = useMemo(() => analyzeActivities(allWeeks), [allWeeks]);
   const nextPayday = getNextPayday();
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const daysUntilPay = Math.round((nextPayday - today) / (1000 * 60 * 60 * 24));
@@ -294,25 +301,46 @@ export default function Dashboard({ currentWeekHours, currentWeekKey, onWeekSele
         </section>
       )}
 
-      {keywords.length > 0 && (
+      {activityData.categories.length > 0 && (
         <section style={{ marginBottom: 28 }}>
-          <h3 style={sectionHead}>Top activities</h3>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <DonutChart segments={keywords.map(([word, count]) => ({ label: word, value: count }))} size={110} thickness={24} />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {keywords.map(([word, count], i) => {
+          <h3 style={sectionHead}>Time breakdown</h3>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 12 }}>
+            <DonutChart
+              segments={activityData.categories.map(c => ({ label: c.label, value: c.hours || c.count }))}
+              size={100} thickness={22}
+            />
+            <div style={{ flex: 1 }}>
+              {activityData.categories.map(({ label, hours, count }, i) => {
                 const COLORS = ['#c87941','#5a9e8f','#d4725a','#7a9e5a','#9b7ec8','#d4b45a','#6b8fae','#c45a7a'];
+                const pct = activityData.totalHours > 0 ? Math.round(hours / activityData.totalHours * 100) : 0;
+                const hasHours = hours > 0.05;
                 return (
-                  <div key={word} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                    <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[i % COLORS.length], flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: 'var(--text)', flex: 1 }}>{word}</span>
-                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>×{count}</span>
+                  <div key={label} style={{ marginBottom: 7 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: 2, background: COLORS[i % COLORS.length], flexShrink: 0 }} />
+                      <span style={{ fontSize: 12, color: 'var(--text)', flex: 1, fontWeight: 500 }}>{label}</span>
+                      {hasHours && (
+                        <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginRight: 2 }}>
+                          {hours < 1 ? `${Math.round(hours * 60)}m` : `${fmtH(hours)}h`}
+                        </span>
+                      )}
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)', minWidth: 26, textAlign: 'right' }}>
+                        {hasHours ? `${pct}%` : `×${count}`}
+                      </span>
+                    </div>
+                    {hasHours && (
+                      <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden', marginLeft: 14 }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: COLORS[i % COLORS.length], borderRadius: 2, transition: 'width 0.5s ease' }} />
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
           </div>
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 10 }}>Based on keywords across all logged entries.</p>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            Hours estimated by distributing session time across bullets.
+          </p>
         </section>
       )}
 
