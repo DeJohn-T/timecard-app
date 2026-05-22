@@ -54,6 +54,71 @@ export default function App() {
   const [view, setView] = useState('log');
   const saveTimer = useRef({});
 
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animId;
+
+    const orbs = [
+      { x: 0.2, y: 0.3, r: 0.35, vx: 0.00012, vy: 0.00009, h: 25, s: 60, a: 0.08 },
+      { x: 0.7, y: 0.6, r: 0.30, vx: -0.00010, vy: 0.00013, h: 35, s: 50, a: 0.07 },
+      { x: 0.5, y: 0.1, r: 0.28, vx: 0.00008, vy: -0.00011, h: 20, s: 65, a: 0.06 },
+      { x: 0.1, y: 0.8, r: 0.32, vx: 0.00014, vy: -0.00008, h: 40, s: 45, a: 0.07 },
+      { x: 0.9, y: 0.4, r: 0.25, vx: -0.00009, vy: 0.00015, h: 15, s: 55, a: 0.06 },
+    ];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function draw() {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#0a0704';
+      ctx.fillRect(0, 0, W, H);
+
+      for (const o of orbs) {
+        o.x += o.vx;
+        o.y += o.vy;
+        if (o.x < -0.3) o.x = 1.3;
+        if (o.x > 1.3) o.x = -0.3;
+        if (o.y < -0.3) o.y = 1.3;
+        if (o.y > 1.3) o.y = -0.3;
+        const gx = o.x * W, gy = o.y * H, gr = o.r * Math.max(W, H);
+        const g = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+        g.addColorStop(0, `hsla(${o.h}, ${o.s}%, 28%, ${o.a})`);
+        g.addColorStop(1, `hsla(${o.h}, ${o.s}%, 10%, 0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const imgData = ctx.getImageData(0, 0, W, H);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 16) {
+        const n = (Math.random() - 0.5) * 12;
+        d[i]   = Math.min(255, Math.max(0, d[i]   + n));
+        d[i+1] = Math.min(255, Math.max(0, d[i+1] + n));
+        d[i+2] = Math.min(255, Math.max(0, d[i+2] + n));
+      }
+      ctx.putImageData(imgData, 0, 0);
+      animId = requestAnimationFrame(draw);
+    }
+
+    draw();
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
   const payday = isPayday();
   const daysUntilPay = daysUntilNextPayday();
   const greeting = GREETINGS[new Date().getDay() % GREETINGS.length];
@@ -99,11 +164,13 @@ export default function App() {
   const fmtH = (h) => (h % 1 === 0 ? `${h}.0` : h.toFixed(2).replace(/0+$/, ''));
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <>
+      <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }} />
+      <div style={{ position: 'relative', zIndex: 1, maxWidth: 600, margin: '0 auto', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
       {/* Header band */}
       <div style={{
-        background: 'linear-gradient(160deg, #13131a 0%, #0d0d10 100%)',
+        background: 'linear-gradient(160deg, #150e08 0%, #0a0704 100%)',
         borderBottom: '1px solid var(--border)',
         padding: '16px 16px 14px',
       }}>
@@ -285,5 +352,6 @@ export default function App() {
         />
       )}
     </div>
+  </>
   );
 }
