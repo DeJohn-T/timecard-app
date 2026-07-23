@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { saveSettings, exportAllData, importAllData } from '../lib/storage.js';
+import { seedDemoData } from '../lib/demoSeed.js';
 
 export default function SettingsPage({ settings, onSave, onClose }) {
   const [form, setForm] = useState({ ...settings });
@@ -135,6 +136,18 @@ export default function SettingsPage({ settings, onSave, onClose }) {
             </span>
           </label>
         </Field>
+
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 4, marginBottom: 16 }}>
+          <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-muted)' }}>
+            Demo — load realistic placeholder data for screenshots.
+          </p>
+          <button
+            onClick={seedDemoData}
+            style={{ width: '100%', background: 'var(--surface2)', color: 'var(--accent)', border: '1px solid rgba(200,121,65,0.35)', borderRadius: 8, padding: '11px', fontSize: 14, cursor: 'pointer', fontWeight: 600 }}
+          >
+            Load demo data
+          </button>
+        </div>
 
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 4 }}>
           <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--text-muted)' }}>
